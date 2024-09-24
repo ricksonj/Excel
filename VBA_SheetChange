@@ -1,0 +1,59 @@
+----------VBA if a change is made on the sheet then capture the change in a backtab-----------
+----------------------------------------------------------------------------------------
+-- Worksheet / Change setting under (Sheet1) --
+-- sheet name = sheet1 / storage tab = Log --
+-- data sits in column C and D in this scenario --
+
+-------------------------------VBA CODE-----------------------------------------------------
+Private Sub worksheet_change(ByVal target As Range)
+  
+For Each j In target
+Dim wb As Workbook
+Dim wb2 As Worksheet
+Dim NextRow As Long
+
+Set wb = ThisWorkbook
+Set ws2 = wb.Worksheets("Log")
+NextRow = ws2.Cells(Rows.Count, 1).End(xlUp).Row + 1
+
+Dim CellAdd As String
+CellAdd = j.Address
+Dim newValue As String
+newValue = j.Value
+
+Application.EnableEvents = False
+Application.Undo
+oldvalue = j.Value
+Application.Undo
+Application.EnableEvents = True
+
+If Not Intersect(target, Range("C:C")) Is Nothing Then
+
+ws2.Cells(NextRow, 1) = Range(j.Address).Offset(0, -2).Value
+ws2.Cells(NextRow, 2) = Range(j.Address).Offset(0, -1).Value
+ws2.Cells(NextRow, 3) = oldvalue
+ws2.Cells(NextRow, 4) = Range(j.Address).Offset(0, 1).Value
+ws2.Cells(NextRow, 5) = newValue
+ws2.Cells(NextRow, 6) = Range(j.Address).Offset(0, 1).Value
+ws2.Cells(NextRow, 7) = Format(Now(), "DD-MM-YYYY HH:MM:ss")
+ws2.Cells(NextRow, 8) = Environ("Username")
+ws2.Cells(NextRow, 9) = "Indicator"
+
+ElseIf Not Intersect(target, Range("D:D")) Is Nothing Then
+
+ws2.Cells(NextRow, 1) = Range(j.Address).Offset(0, -3).Value
+ws2.Cells(NextRow, 2) = Range(j.Address).Offset(0, -2).Value
+ws2.Cells(NextRow, 3) = Range(j.Address).Offset(0, -1).Value
+ws2.Cells(NextRow, 4) = oldvalue
+ws2.Cells(NextRow, 5) = Range(j.Address).Offset(0, -1).Value
+ws2.Cells(NextRow, 6) = newValue
+ws2.Cells(NextRow, 7) = Format(Now(), "DD-MM-YYYY HH:MM:ss")
+ws2.Cells(NextRow, 8) = Environ("Username")
+ws2.Cells(NextRow, 9) = "Reason"
+
+End If
+
+Next j
+
+End Sub
+----------------------------------------------------------------------------------------
