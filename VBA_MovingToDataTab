@@ -1,0 +1,69 @@
+----------Security Report: Data moved from Input tab to Data Tab-------------
+-----------------------------------------------------------------------------
+Sub UPDATEE()
+''' Improve Time taken for Securities team to update their reporting
+''' PROCESS: Paste data into the input tab, then the code adds formulas onto the end, hard codes the data and cut/pastes it into the data tab.
+''' There is a named range for the data tab that is then used in all the pivot tables on the summary table
+Dim lastrow As Long: Dim answer As Integer
+answer = MsgBox("Has data been pasted into the Input tab?", vbYesNo) 'If person answer NO then the macro stops so they can paste in data
+If answer = vbNo Then
+    MsgBox ("Macro Cancelled")
+    Exit Sub
+Else
+    Application.ScreenUpdating = False
+'
+    Sheets("Input").Activate
+        lastrow = Cells(Rows.Count, 1).End(xlUp).Row 'calculates last row with data
+        If lastrow = 1 Then
+        MsgBox ("No Data Inputted")
+        Exit Sub
+        Else
+    MsgBox "Will now Calculate, may take a few minutes - will prompt when Done"
+''' INSERT FORMULAS
+        Range("G2").Value = "=IF(LEFT(F2,3)=""UKO"",""Embankment"",""Shipley"")" 'Determines Office
+        Range("H2").Value = "=ROUNDDOWN( A2 , 0 )" 'Converts Datetime to day
+        Range("I2").Value = "=WEEKDAY( A2 ,2)" 'Weekday no
+        Range("J2").Value = "=TEXT( A2 ,""DDD"")" 'weekday name
+        Range("K2").Value = "=TEXT( A2 ,""YY-MM"")" 'yearmonth
+        Range("L2").Value = "=TEXT( A2 ,""Mmm-YY"")" 'month year desc
+    DoEvents
+        Range("M2").Value = "=IF(COUNTIFS($B$2:B2,B2,$H$2:H2,H2,$G$2:G2,G2) > 1, """", COUNTIFS(B:B,B2,H:H,H2,G:G,G2) )" 'Determines how many records their are of that person/day
+        Range("N2").Value = "=IF( COUNTIFS($B$2:B2,B2,$L$2:L2,L2,$G$2:G2,G2) <= 1,1,"""" )" 'Used to dedup monthly uses by that person to summarise in pivot tables
+        Range("O2").Value = "=IF(COUNTIFS($L$2:L2,L2,$G$2:G2,G2,$E$2:E2,E2,$H$2:H2,H2)<=1,1, """" )" 'Used to dedup records to summarise in pivots to unique calendar days involved
+    DoEvents
+        Range("G2:O2").Select
+        Selection.AutoFill Destination:=Range("G2:O" & lastrow) 'Selects Formula columns and fills down to last row
+        Range("G2").Select
+    DoEvents
+''' PASTE VALUES OVER THE DATA
+        lastrow = Cells(Rows.Count, 1).End(xlUp).Row 'calculates last row with data
+    Range("G1:O" & lastrow).Select
+        Selection.Copy
+        Selection.PasteSpecial Paste:=xlPasteValues
+        Application.CutCopyMode = False
+        Range("G2").Select
+    '
+    Range("A2:O" & lastrow).Select
+        Selection.Copy
+        End If
+''' PASTE NEW DATA AT THE BOTTOM OF THE DATA TAB
+    Sheets("Data").Activate
+        lastrow = Cells(Rows.Count, 1).End(xlUp).Row + 1 'Determines next empty row to paste data into
+        Range("A" & lastrow).PasteSpecial xlPasteValues 'Paste values
+        Application.CutCopyMode = False
+''' CLEARS THE INPUT TAB FOR NEXT TIME
+    Sheets("Input").Activate
+        lastrow = Cells(Rows.Count, 1).End(xlUp).Row 'calculates last row with data
+        Range("A2:O" & lastrow).Clear 'Deletes Data from the Input tab
+        Range("A2").Select
+''' REFRESHES ALL DATA IN SPREADSHEET - UPDATING THE PIVOT TABLES
+    Sheets("Summary").Activate
+        Range("A1").Select
+        ActiveWorkbook.RefreshAll 'Equivalent of clicking the refresh all button
+'
+End If
+Application.ScreenUpdating = True
+Application.Calculation = xlCalculationAutomatic
+MsgBox ("Done")
+End Sub
+-----------------------------------------------------------------------------
