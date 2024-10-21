@@ -3,3 +3,4 @@
 
 DGET - treats like a database, allows you to lookup without using VLOOKUP
 AGGREGATE - allows you to sum and ignores errors in some cells
+MID - rather than nesting RIGHT(LEFT)
